@@ -55,7 +55,7 @@ namespace CashFlow.Areas.User.Controllers
 
             if (user == null)
             {
-                return NotFound();
+                return View("Error");
             }
 
             IEnumerable<string> userRoles = await _usersService.GetUserRolesAsync(user);
