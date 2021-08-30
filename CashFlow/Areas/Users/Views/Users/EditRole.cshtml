@@ -1,0 +1,33 @@
+﻿@using Microsoft.AspNetCore.Identity
+@model CashFlow.Areas.Users.ViewModels.EditRoleViewModel
+
+
+<form asp-area="Users" asp-controller="Users" asp-action="EditRole" method="post">
+    <input type="hidden" name="userId" value="@Model.Id" />
+    <div class="form-group">
+        @foreach (IdentityRole role in Model.AllRoles)
+        {
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="roles" value="@role.Name" id="flexCheckDefault" 
+                       @(Model.UserRoles.Contains(role.Name) ? "checked=\"checked\"" : "")/>
+                <label class="form-check-label" for="flexCheckDefault">
+                    @role.Name
+                </label>
+            </div>
+        }
+    </div>
+    <button type="submit" class="btn btn-primary">Сохранить</button>
+</form>
+
+<div class="form-check">
+    <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+    <label class="form-check-label" for="flexCheckDefault">
+        Default checkbox
+    </label>
+</div>
+<div class="form-check">
+    <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" checked>
+    <label class="form-check-label" for="flexCheckChecked">
+        Checked checkbox
+    </label>
+</div>

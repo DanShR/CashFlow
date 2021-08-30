@@ -1,0 +1,26 @@
+﻿@model CashFlow.Areas.Account.ViewModels.EditViewModel
+<div class="container">
+    <div class="row">
+        <div class="col-6">
+            <form method="post" asp-area="Account" asp-controller="Account" asp-action="Edit">
+                <div class="form-group">
+                    <label asp-for="Email">Email</label>
+                    <input class="form-control" asp-for="Email" readonly>
+                    <small id="emailHelp" class="form-text text-muted">Мы никогда никому не передадим Вашу электронную почту.</small>
+                </div>
+                <div class="form-group">
+                    <label asp-for="RegisterDate">Дата регистрации</label>
+                    <input class="form-control" asp-for="RegisterDate" readonly>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Name">Имя</label>
+                    <input class="form-control" asp-for="Name">
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Сохранить</button>
+            </form>
+
+        </div>
+   
+    </div>
+</div>
