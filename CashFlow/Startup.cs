@@ -14,6 +14,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CashFlow.Areas.Account;
 using CashFlow.Areas.Account.Services;
+using CashFlow.Areas.Users.Services;
 using CashFlow.Common.Email;
 
 namespace CashFlow
@@ -31,6 +32,7 @@ namespace CashFlow
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddScoped<IAccountService, AccountService>();
+            services.AddScoped<IUsersService, UsersService>();
             services.AddTransient<IEmailSender, EmailSender>();
 
             services.AddDbContext<ApplicationDbContext>(options =>

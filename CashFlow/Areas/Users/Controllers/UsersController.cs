@@ -1,82 +1,49 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CashFlow.Areas.Account;
+using CashFlow.Areas.Users.Model;
+using CashFlow.Areas.Users.Services;
 using CashFlow.Areas.Users.ViewModels;
 using CashFlow.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace CashFlow.Areas.User.Controllers
 {
     [Authorize(Roles = "admin")]
     public class UsersController : Controller
     {
-        private readonly UserManager<AppUser> _userManager;
-        private readonly RoleManager<IdentityRole> _roleManager;
+        
+        private readonly IUsersService _usersService;
 
-        public UsersController(UserManager<AppUser> userManager, RoleManager<IdentityRole> roleManager)
+        public UsersController(IUsersService usersService)
         {
-            _userManager = userManager;
-            _roleManager = roleManager;
+            _usersService = usersService;
         }
 
-        // GET
-        public async Task<IActionResult> Index(int page = 1, string sort = "email", string filter = "")
+        public async Task<IActionResult> Index(int page, string sort, string filter)
         {
-            IEnumerable<AppUser> allUsers = _userManager.Users;
-            IEnumerable<AppUser> users;
-            IEnumerable<AppUser> source;
+            const int pageSize = 20;
 
-            if (filter != null)
-            {
-                source = allUsers.Where(user => user.Email.ToLower().Contains(filter.ToLower()) 
-                                                || user.Name.ToLower().Contains(filter.ToLower()));
-            }
-            else
-            {
-                source = allUsers;
-            }
+            var pageValue = page > 0 ? page : 1;
+            SortType sortValue;
+            sortValue = Enum.TryParse(sort, true, out sortValue) ? sortValue : SortType.Email;
+            
+            string filterValue = String.IsNullOrWhiteSpace(filter) ? String.Empty : filter;
+            IEnumerable<AppUser> usersSource = _usersService.GetUsersWithFilter(filterValue); 
 
-            switch (sort)
-            {
-                case "email":
-                    users = source.OrderBy(user => user.Email).ToList();
-                    break;
-                case "emaildesc":
-                    users = source.OrderByDescending(user => user.Email).ToList();
-                    break;
-                case "name":
-                    users = source.OrderBy(user => user.Name);
-                    break;
-                case "namedesc":
-                    users = source.OrderByDescending(user => user.Name).ToList();
-                    break;
-                default:
-                    users = source.OrderBy(user => user.Email).ToList(); 
-                    break;
+            IEnumerable<AppUser> users = _usersService.GetUsersPage(usersSource, pageValue, pageSize, sortValue);
+            
+            PageViewModel pageViewModel = new PageViewModel(usersSource.Count(), pageValue, pageSize);
 
-            }
-            int pageSize = 20;   
-
-            int count = users.Count();
-            List<AppUser> items = users.Skip((page - 1) * pageSize).Take(pageSize).ToList();
-
-            List<UserViewModel> userViewModels = items.Select(user => new UserViewModel()
-            {
-                Id = user.Id,
-                Email = user.Email,
-                Name = user.Name
-            }).ToList();
-
-            PageViewModel pageViewModel = new PageViewModel(count, page, pageSize);
             IndexViewModel viewModel = new IndexViewModel
             {
                 PageViewModel = pageViewModel,
-                Users = items,
-                Sort = sort,
+                Users = users,
+                Sort = sortValue,
                 Filter = filter
             };
             return View(viewModel);
@@ -84,15 +51,15 @@ namespace CashFlow.Areas.User.Controllers
 
         public async Task<IActionResult> EditRole(string id)
         {
-            AppUser user = await _userManager.FindByIdAsync(id);
+            AppUser user = await _usersService.FindByIdAsync(id);
 
             if (user == null)
             {
                 return NotFound();
             }
 
-            IList<string> userRoles = await _userManager.GetRolesAsync(user);
-            List<IdentityRole> allRoles = _roleManager.Roles.ToList();
+            IEnumerable<string> userRoles = await _usersService.GetUserRolesAsync(user);
+            IEnumerable<IdentityRole> allRoles = _usersService.GetAllRoles();
 
             EditRoleViewModel model = new EditRoleViewModel()
             {
@@ -108,21 +75,10 @@ namespace CashFlow.Areas.User.Controllers
         [HttpPost]
         public async Task<IActionResult> EditRole(string userId, IEnumerable<string> roles)
         {
-            AppUser user = await _userManager.FindByIdAsync(userId);
+            AppUser user = await _usersService.FindByIdAsync(userId);
             if (user != null)
             {
-                var userRoles = await _userManager.GetRolesAsync(user);
-                
-                var allRoles = _roleManager.Roles.ToList();
-                
-                var addedRoles = roles.Except(userRoles);
-                
-                var removedRoles = userRoles.Except(roles);
-
-                await _userManager.AddToRolesAsync(user, addedRoles);
-
-                await _userManager.RemoveFromRolesAsync(user, removedRoles);
-
+                await _usersService.ChangeUserRoles(user, roles);
                 return RedirectToAction("Index", "Users");
             }
 

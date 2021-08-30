@@ -1,19 +1,21 @@
-﻿@model CashFlow.Areas.Users.ViewModels.IndexViewModel
+﻿@using Microsoft.EntityFrameworkCore.Internal
+@using CashFlow.Areas.Users.Model
+@model CashFlow.Areas.Users.ViewModels.IndexViewModel
 
 @{
     string selectedSort = "Сортировка ";
     switch (Model.Sort)
     {
-        case "email":
+        case SortType.Email:
             selectedSort += "по email";
             break;
-        case "emaildesc":
+        case SortType.EmailDesc:
             selectedSort += "по email по убыванию";
             break;
-        case "name":
+        case SortType.Name:
             selectedSort += "по имени";
             break;
-        case "namedesc":
+        case SortType.NameDesc:
             selectedSort += "по имени по убыванию";
             break;
     }
@@ -85,7 +87,10 @@
 
             @if (Model.PageViewModel.HasPreviousPage)
             {
-                <a asp-area="Users" asp-controller="Users" asp-action="Index" asp-route-page="@(Model.PageViewModel.PageNumber - 1)" asp-route-sort="@Model.Sort"
+                <a asp-area="Users" asp-controller="Users" asp-action="Index" 
+                   asp-route-page="@(Model.PageViewModel.PageNumber - 1)" 
+                   asp-route-sort="@Model.Sort"
+                   asp-route-filter="@filter"
                    class="btn btn-sm btn-primary">
                     Назад
                 </a>
@@ -93,7 +98,10 @@
             <span>( @Model.PageViewModel.PageNumber / @Model.PageViewModel.TotalPages)</span>
             @if (Model.PageViewModel.HasNextPage)
             {
-                <a asp-action="Index" asp-area="Users" asp-controller="Users" asp-route-page="@(Model.PageViewModel.PageNumber + 1)" asp-route-sort="@Model.Sort"
+                <a asp-action="Index" asp-area="Users" asp-controller="Users" 
+                   asp-route-page="@(Model.PageViewModel.PageNumber + 1)" 
+                   asp-route-sort="@Model.Sort"
+                   asp-route-filter="@filter"
                    class="btn btn-sm btn-primary">
                     Вперед
                 </a>
