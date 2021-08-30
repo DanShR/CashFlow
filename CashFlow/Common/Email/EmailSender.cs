@@ -1,12 +1,20 @@
 ﻿
 using System.Threading.Tasks;
 using MailKit.Net.Smtp;
+using Microsoft.Extensions.Configuration;
 using MimeKit;
 
 namespace CashFlow.Common.Email
 {
     public class EmailSender : IEmailSender
     {
+        private readonly IConfiguration _configuration;
+
+        public EmailSender(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
         public async Task SendEmailAsync(string email, string subject, string message)
         {
             var emailMessage = new MimeMessage();
@@ -22,7 +30,7 @@ namespace CashFlow.Common.Email
             using (var client = new SmtpClient())
             {
                 await client.ConnectAsync("smtp.gmail.com", 465, true);
-                await client.AuthenticateAsync("dshulakov@gmail.com", "");
+                await client.AuthenticateAsync(_configuration["email"], _configuration["password"]);
                 await client.SendAsync(emailMessage);
 
                 await client.DisconnectAsync(true);
