@@ -12,7 +12,7 @@ namespace CashFlow.Areas.Account.Services
     {
         private static readonly string AdminRoleName = "admin";
         private static readonly string UserRoleName = "user";
-        private static readonly string AdminEmail = "dshulakov@gmail.com";
+        private static readonly string AdminEmail = "dshulakov1@gmail.com";
         private static readonly string AdminPassword = "123";
         private static Random random = new Random();
 
