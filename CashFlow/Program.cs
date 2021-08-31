@@ -35,8 +35,9 @@ namespace CashFlow
                 }
             }
 
-            host.Run();
-                
+            host.
+                Run();
+
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
@@ -44,6 +45,9 @@ namespace CashFlow
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
-                });
+                }).
+        ConfigureAppConfiguration((hostingContext, configuration) =>
+        configuration.AddEnvironmentVariables(
+            prefix: "CustomPrefix_"));
     }
 }

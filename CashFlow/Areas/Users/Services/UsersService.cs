@@ -19,7 +19,6 @@ namespace CashFlow.Areas.Users.Services
             _roleManager = roleManager;
         }
 
-
         public IEnumerable<AppUser> GetAllUsers()
         {
             return _userManager.Users;
@@ -41,7 +40,6 @@ namespace CashFlow.Areas.Users.Services
             }
             return users;
         }
-
 
 
         public IEnumerable<AppUser> GetUsersPage(IEnumerable<AppUser> source, int page, int pageSize, SortType sortType)
@@ -74,7 +72,7 @@ namespace CashFlow.Areas.Users.Services
 
         public async Task<AppUser> FindByIdAsync(string id)
         {
-            return await _userManager.FindByEmailAsync(id);
+            return await _userManager.FindByIdAsync(id);
         }
 
         public async Task<IEnumerable<string>> GetUserRolesAsync(AppUser user)
@@ -97,6 +95,11 @@ namespace CashFlow.Areas.Users.Services
 
             await _userManager.AddToRolesAsync(user, addedRoles);
             await _userManager.RemoveFromRolesAsync(user, removedRoles);
+        }
+
+        public async Task<AppUser> FindByEmailAsync(string email)
+        {
+            return await _userManager.FindByEmailAsync(email);
         }
     }
 }

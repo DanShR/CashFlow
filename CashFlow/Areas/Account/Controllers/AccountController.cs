@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CashFlow.Areas.Account.Services;
 using CashFlow.Areas.Account.ViewModels;
+using CashFlow.Areas.Users.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -13,14 +14,16 @@ namespace CashFlow.Areas.Account.Controllers
     {
 
         private readonly IAccountService _accountService;
+        private readonly IUsersService _usersService;
         private readonly SignInManager<AppUser> _signInManager;
         private readonly UserManager<AppUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
 
-        public AccountController(UserManager<AppUser> userManager, IAccountService accountService, SignInManager<AppUser> signInManager, RoleManager<IdentityRole> roleManager)
+        public AccountController(UserManager<AppUser> userManager, IAccountService accountService, IUsersService usersService, SignInManager<AppUser> signInManager, RoleManager<IdentityRole> roleManager)
         {
             this._userManager = userManager;
             this._accountService = accountService;
+            this._usersService = usersService;
             this._signInManager = signInManager;
             this._roleManager = roleManager;
         }
@@ -36,42 +39,23 @@ namespace CashFlow.Areas.Account.Controllers
             if (!ModelState.IsValid)
             {
                 return View(model);
-            }
+            }            
 
-            AppUser user = new AppUser
-            {
-                Email = model.Email,
-                UserName = model.Email,
-                Name = model.Name,
-                IsActive = true,
-                RegisterDate = DateTime.Now
-            };
-
-            IdentityResult result = await _accountService.AddUser(user, model.Password);
+            IdentityResult result = await _accountService.AddUser(model.Email, model.Name, model.Password);
 
             if (!result.Succeeded)
             {
                 foreach (IdentityError error in result.Errors)
-                {
-                    string description = "DuplicateUserName".Equals(error.Code)
-                        ? "Указанный email уже зарегистрирован"
-                        : error.Description;
-                    ModelState.AddModelError(String.Empty, description);
+                {    
+                    ModelState.AddModelError(String.Empty, error.Description);
                 }
                 return View(model);
             }
 
-            var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-
-            var callbackUrl = Url.Action(
-                $"ConfirmEmail",
-                $"Account",
-                new { userId = user.Id, code },
-                HttpContext.Request.Scheme
-            );
-
-            await _accountService.SendConfirmEmail(user.Email, callbackUrl);
-
+            AppUser user = await _usersService.FindByEmailAsync(model.Email);
+            
+            await _accountService.SendConfirmEmail(user);
+                       
             return RedirectToAction($"RegisterFinish", $"Account", new { email = user.Email });
 
         }
@@ -251,16 +235,8 @@ namespace CashFlow.Areas.Account.Controllers
                 return View();
             }
 
-            var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-
-            var callbackUrl = Url.Action(
-                $"ConfirmEmail",
-                $"Account",
-                new { userId = user.Id, code },
-                HttpContext.Request.Scheme
-            );
-
-            await _accountService.SendConfirmEmail(user.Email, callbackUrl);
+           
+            await _accountService.SendConfirmEmail(user);
 
             return RedirectToAction($"RegisterFinish", $"Account", new { email });
         }

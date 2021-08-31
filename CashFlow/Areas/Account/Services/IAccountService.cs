@@ -8,8 +8,8 @@ namespace CashFlow.Areas.Account.Services
 {
     public interface IAccountService
     {
-        Task<IdentityResult> AddUser(AppUser user, string password);
-        Task SendConfirmEmail(string email, string callbackUrl);
+        Task<IdentityResult> AddUser(string email, string name, string password);
+        Task SendConfirmEmail(AppUser user);
         Task SendRecoveryPasswordEmail(string email, string callbackUrl);
     }
 }

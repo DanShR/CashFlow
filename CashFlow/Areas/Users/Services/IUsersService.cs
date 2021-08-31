@@ -11,6 +11,7 @@ namespace CashFlow.Areas.Users.Services
         IEnumerable<AppUser> GetAllUsers();
         IEnumerable<AppUser> GetUsersPage(IEnumerable<AppUser> source, int page, int pageSize, SortType sortType);
         Task<AppUser> FindByIdAsync(string id);
+        Task<AppUser> FindByEmailAsync(string email);
         Task<IEnumerable<string>> GetUserRolesAsync(AppUser user);
         IEnumerable<IdentityRole> GetAllRoles();
         Task ChangeUserRoles(AppUser user, IEnumerable<string> roles);

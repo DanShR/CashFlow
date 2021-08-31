@@ -1,4 +1,5 @@
 ﻿
+using System;
 using System.Threading.Tasks;
 using MailKit.Net.Smtp;
 using Microsoft.Extensions.Configuration;
@@ -29,8 +30,9 @@ namespace CashFlow.Common.Email
 
             using (var client = new SmtpClient())
             {
+                var  s = Environment.GetEnvironmentVariable("EMAIL_PASSWORD");
                 await client.ConnectAsync("smtp.gmail.com", 465, true);
-                await client.AuthenticateAsync(_configuration["email"], _configuration["password"]);
+                await client.AuthenticateAsync(Environment.GetEnvironmentVariable("EMAIL"), Environment.GetEnvironmentVariable("EMAIL_PASSWORD"));
                 await client.SendAsync(emailMessage);
 
                 await client.DisconnectAsync(true);
