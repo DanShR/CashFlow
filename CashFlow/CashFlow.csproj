@@ -14,4 +14,6 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="3.1.16" />
   </ItemGroup>
 
+  <ProjectExtensions><VisualStudio><UserProperties appsettings_1json__JsonSchema="https://ffizer.github.io/ffizer/ffizer.schema.json" /></VisualStudio></ProjectExtensions>
+
 </Project>
