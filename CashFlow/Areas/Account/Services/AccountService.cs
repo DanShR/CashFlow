@@ -2,10 +2,12 @@
 using System.Security.Claims;
 using System.Security.Policy;
 using System.Threading.Tasks;
+using System.Web;
 using CashFlow.Common.Email;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using SignInResult = Microsoft.AspNetCore.Identity.SignInResult;
 
 
 namespace CashFlow.Areas.Account.Services
@@ -14,11 +16,13 @@ namespace CashFlow.Areas.Account.Services
     {
         private readonly UserManager<AppUser> _userManager;
         private readonly IEmailSender _emailSender;
+        private readonly SignInManager<AppUser> _signInManager;
 
-        public AccountService(UserManager<AppUser> userManager, IEmailSender emailSender)
+        public AccountService(UserManager<AppUser> userManager, IEmailSender emailSender, SignInManager<AppUser> signInManager)
         {
             _userManager = userManager;
             _emailSender = emailSender;
+            _signInManager = signInManager;
         }
 
         public async Task<IdentityResult> AddUser(string email, string name, string password)
@@ -38,12 +42,11 @@ namespace CashFlow.Areas.Account.Services
 
         public async Task SendConfirmEmail(AppUser user)
         {
-            string code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            string code = HttpUtility.UrlEncode(await _userManager.GenerateEmailConfirmationTokenAsync(user));
             string url = $"https://localhost:44322/Account/Account/ConfirmEmail?userId={user.Id}&code={code}";
             string subject = "Подтверждение регистрации";
-            string message = $"Подтвердите регистрацию, перейдя по ссылке: <a href='{url}'>link</a>";
-
-            //await _accountService.SendConfirmEmail(user.Email, callbackUrl);
+            string message = $"Подтвердите регистрацию, перейдя по ссылке: <a href='{url}'>link</a>";            
+            
             await _emailSender.SendEmailAsync(user.Email, subject, message);
         }
 
@@ -51,6 +54,16 @@ namespace CashFlow.Areas.Account.Services
         {
             await _emailSender.SendEmailAsync(email, "Восстановление пароля",
                 $"Для восстановления пароля перейдите по ссылке: <a href='{callbackUrl}'>link</a>");
+        }
+
+        public async Task<SignInResult> Login(AppUser user, string password, bool isPersistent, bool lockoutOnFailure)
+        {
+            return await _signInManager.PasswordSignInAsync(user, password, isPersistent, lockoutOnFailure);
+        }
+
+        public async Task<IdentityResult> ConfirmEmailAsync(AppUser user, string code)
+        {
+            return await _userManager.ConfirmEmailAsync(user, code);
         }
     }
 }
