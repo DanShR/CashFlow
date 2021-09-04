@@ -15,15 +15,11 @@ namespace CashFlow.Areas.Account.Controllers
 
         private readonly IAccountService _accountService;
         private readonly IUsersService _usersService;
-        private readonly SignInManager<AppUser> _signInManager;
-        private readonly UserManager<AppUser> _userManager;
-
+        
         public AccountController(UserManager<AppUser> userManager, IAccountService accountService, IUsersService usersService, SignInManager<AppUser> signInManager, RoleManager<IdentityRole> roleManager)
         {
-            this._userManager = userManager;
-            this._accountService = accountService;
-            this._usersService = usersService;
-            this._signInManager = signInManager;
+            _accountService = accountService;
+            _usersService = usersService;
         }
 
         public IActionResult Register()
@@ -144,14 +140,14 @@ namespace CashFlow.Areas.Account.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
-            await _signInManager.SignOutAsync();
+            await _accountService.Logout();
             return Redirect("/");
         }
 
         public async Task<IActionResult> Edit()
         {
 
-            AppUser currentUser = await _userManager.GetUserAsync(User);
+            AppUser currentUser = await _usersService.GetCurrentUser(User);
             var editViewModel = new EditViewModel { Email = currentUser.Email, Name = currentUser.Name, RegisterDate = currentUser.RegisterDate };
 
             return View(editViewModel);
@@ -166,7 +162,7 @@ namespace CashFlow.Areas.Account.Controllers
                 return View(model);
             }
 
-            AppUser currentUser = await _userManager.GetUserAsync(User);
+            AppUser currentUser = await _usersService.GetCurrentUser(User);
 
             if (currentUser == null)
             {
@@ -175,7 +171,7 @@ namespace CashFlow.Areas.Account.Controllers
 
             currentUser.Name = model.Name;
             
-            var result = await _userManager.UpdateAsync(currentUser);
+            var result = await _usersService.Update(currentUser);
 
             if (!result.Succeeded)
             {
@@ -200,14 +196,14 @@ namespace CashFlow.Areas.Account.Controllers
                 return BadRequest();
             }
             
-            AppUser currentUser = await _userManager.GetUserAsync(User);
+            AppUser currentUser = await _usersService.GetCurrentUser(User);
 
             if (currentUser == null)
             {
                 return BadRequest();
             }
             
-            IdentityResult result = await _userManager.ChangePasswordAsync(currentUser, model.OldPassword, model.NewPassword);
+            IdentityResult result = await _usersService.ChangePassword(currentUser, model.OldPassword, model.NewPassword);
 
             if (!result.Succeeded)
             {
@@ -228,7 +224,7 @@ namespace CashFlow.Areas.Account.Controllers
         [HttpPost]
         public async  Task<IActionResult> SendConfirmEmail(string email)
         {
-            AppUser user = await _userManager.FindByEmailAsync(email);
+            AppUser user = await _usersService.FindByEmailAsync(email);
 
             if (user == null)
             {
@@ -250,7 +246,7 @@ namespace CashFlow.Areas.Account.Controllers
         [HttpPost]
         public async Task<IActionResult> ForgotPassword(string email)
         {
-            AppUser user = await _userManager.FindByEmailAsync(email);
+            AppUser user = await _usersService.FindByEmailAsync(email);
 
             if (user == null)
             {
@@ -258,18 +254,10 @@ namespace CashFlow.Areas.Account.Controllers
                 return View();
             }
 
-            var code = await _userManager.GeneratePasswordResetTokenAsync(user);
+            
+            await _accountService.SendRecoveryPasswordEmail(user);
 
-            var callbackUrl = Url.Action(
-                $"RecoveyPassword",
-                $"Account",
-                new { userId = user.Id, code },
-                HttpContext.Request.Scheme
-            );
-
-            await _accountService.SendRecoveryPasswordEmail(user.Email, callbackUrl);
-
-            return View();
+            return RedirectToAction($"RegisterFinish", $"Account", new { email });
         }
 
         public  IActionResult RecoveyPassword(string userId, string code)
@@ -284,14 +272,14 @@ namespace CashFlow.Areas.Account.Controllers
             {
                 return BadRequest();
             }
-            AppUser user = await _userManager.FindByIdAsync(model.Id);
+            AppUser user = await _usersService.FindByIdAsync(model.Id);
 
             if (user == null)
             {
                 return BadRequest();
             }
 
-            var result = await _userManager.ResetPasswordAsync(user, model.Code, model.NewPassword);
+            var result = await _accountService.ResetPassword(user, model.Code, model.NewPassword);
             if (result.Succeeded)
             {
                 return Redirect("/");

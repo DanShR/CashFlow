@@ -50,15 +50,26 @@ namespace CashFlow.Areas.Account.Services
             await _emailSender.SendEmailAsync(user.Email, subject, message);
         }
 
-        public async Task SendRecoveryPasswordEmail(string email, string callbackUrl)
+        public async Task SendRecoveryPasswordEmail(AppUser user)
         {
-            await _emailSender.SendEmailAsync(email, "Восстановление пароля",
-                $"Для восстановления пароля перейдите по ссылке: <a href='{callbackUrl}'>link</a>");
+            string code = HttpUtility.UrlEncode(await _userManager.GeneratePasswordResetTokenAsync(user));
+            string url = $"https://localhost:44322/Account/Account/RecoveyPassword?userId={user.Id}&code={code}";
+            string subject = "Восстановление пароля";
+            string message = $"Для восстановления пароля перейдите по ссылке: <a href='{url}'>link</a>";
+
+            await _emailSender.SendEmailAsync(user.Email, subject,
+                message);
         }
 
         public async Task<SignInResult> Login(AppUser user, string password, bool isPersistent, bool lockoutOnFailure)
         {
             return await _signInManager.PasswordSignInAsync(user, password, isPersistent, lockoutOnFailure);
+        }
+
+        public async Task Logout() => await _signInManager.SignOutAsync();
+        public async Task<IdentityResult> ResetPassword(AppUser user, string code, string newPassword)
+        {
+            return await _userManager.ResetPasswordAsync(user, code, newPassword);
         }
 
         public async Task<IdentityResult> ConfirmEmailAsync(AppUser user, string code)

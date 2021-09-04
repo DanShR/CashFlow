@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using CashFlow.Areas.Account;
 using CashFlow.Areas.Users.Model;
@@ -39,6 +40,21 @@ namespace CashFlow.Areas.Users.Services
                 users = allUsers;
             }
             return users;
+        }
+
+        public async Task<AppUser> GetCurrentUser(ClaimsPrincipal principal)
+        {
+            return await _userManager.GetUserAsync(principal);
+        }
+
+        public async Task<IdentityResult> Update(AppUser user)
+        {
+            return await _userManager.UpdateAsync(user);
+        }
+
+        public Task<IdentityResult> ChangePassword(AppUser user, string oldPassword, string newPassword)
+        {
+            return _userManager.ChangePasswordAsync(user, oldPassword, newPassword);
         }
 
 
