@@ -17,7 +17,6 @@ namespace CashFlow.Areas.Account.Controllers
         private readonly IUsersService _usersService;
         private readonly SignInManager<AppUser> _signInManager;
         private readonly UserManager<AppUser> _userManager;
-        private readonly RoleManager<IdentityRole> _roleManager;
 
         public AccountController(UserManager<AppUser> userManager, IAccountService accountService, IUsersService usersService, SignInManager<AppUser> signInManager, RoleManager<IdentityRole> roleManager)
         {
@@ -25,7 +24,6 @@ namespace CashFlow.Areas.Account.Controllers
             this._accountService = accountService;
             this._usersService = usersService;
             this._signInManager = signInManager;
-            this._roleManager = roleManager;
         }
 
         public IActionResult Register()
@@ -53,7 +51,7 @@ namespace CashFlow.Areas.Account.Controllers
             }
 
             AppUser user = await _usersService.FindByEmailAsync(model.Email);
-            
+
             await _accountService.SendConfirmEmail(user);
                        
             return RedirectToAction($"RegisterFinish", $"Account", new { email = user.Email });
@@ -68,12 +66,15 @@ namespace CashFlow.Areas.Account.Controllers
             {
                 return View("Error");
             }
-            var user = await _userManager.FindByIdAsync(userId);
+            var user = await _usersService.FindByIdAsync(userId);
+
             if (user == null)
             {
                 return View("Error");
             }
-            var result = await _userManager.ConfirmEmailAsync(user, code);
+            
+            var result = await _accountService.ConfirmEmailAsync(user, code);
+
             if (result.Succeeded)
             {
                 return Redirect("/");
@@ -105,7 +106,7 @@ namespace CashFlow.Areas.Account.Controllers
                 return View(model);
             }
 
-            AppUser user = await _userManager.FindByEmailAsync(model.Email);
+            AppUser user = await _usersService.FindByEmailAsync(model.Email);
 
             if (user == null)
             {
@@ -119,7 +120,7 @@ namespace CashFlow.Areas.Account.Controllers
                 return View(model);
             }
 
-            var result = await _signInManager.PasswordSignInAsync(user, model.Password, model.RememberMe, false);
+            var result = await _accountService.Login(user, model.Password, model.RememberMe, false);
 
             if (!result.Succeeded)
             {
@@ -235,7 +236,7 @@ namespace CashFlow.Areas.Account.Controllers
                 return View();
             }
 
-           
+
             await _accountService.SendConfirmEmail(user);
 
             return RedirectToAction($"RegisterFinish", $"Account", new { email });
